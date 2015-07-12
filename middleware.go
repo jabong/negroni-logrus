@@ -66,7 +66,9 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	log.GetDAgent().Count(fmt.Sprintf("%d_requests", res.Status()), 1)
 	if res.Status() == http.StatusOK {
 		log.Info(msg)
-	} else {
+	} else if res.Status() == http.StatusInternalServerError {
 		log.Err(msg)
+	} else {
+		log.Alertf(msg)
 	}
 }
