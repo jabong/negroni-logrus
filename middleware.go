@@ -45,7 +45,10 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		}).Info("started handling request")
 	}
 	msg := fmt.Sprintf("started handling request: method=%s remote=%s request=%s X-Jabong-Reqid=%v X-Jabong-Tid=%v", r.Method, r.RemoteAddr, r.RequestURI, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
-	log.Info(msg)
+	if r.RequestURI != "/catalog/v1/healthcheck/" {
+		log.Info(msg)
+	}
+
 	next(rw, r)
 	latency := time.Since(start)
 	res := rw.(negroni.ResponseWriter)
@@ -65,7 +68,9 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	msg = fmt.Sprintf("completed handling request: measure#%s.latency=%d method=%s remote=%s request=%s status=%d text_status=%s took=%s X-Jabong-Reqid=%v X-Jabong-Tid=%v", l.Name, latency.Nanoseconds(), r.Method, r.RemoteAddr, r.RequestURI, res.Status(), http.StatusText(res.Status()), latency, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	log.GetDAgent().Count(fmt.Sprintf("%d_requests", res.Status()), 1)
 	if res.Status() == http.StatusOK {
-		log.Info(msg)
+		if r.RequestURI != "/catalog/v1/healthcheck/" {
+			log.Info(msg)
+		}
 	} else if res.Status() == http.StatusInternalServerError {
 		log.Err(msg)
 	} else {
