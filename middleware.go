@@ -74,7 +74,9 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	}
 
 	if res.Status() == http.StatusOK {
-		log.Info(msg)
+	    if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
+			log.Info(msg)
+		}
 	} else if res.Status() == http.StatusInternalServerError {
 		log.Err(msg)
 	} else {
