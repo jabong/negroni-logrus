@@ -72,13 +72,14 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	if r.RequestURI == "/catalog/v1/healthcheck/" || r.RequestURI == "/catalog/v1/healthcheck" {
 		return
 	}
-	if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
-		if res.Status() == http.StatusOK {
+
+	if res.Status() == http.StatusOK {
+	    if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
 			log.Info(msg)
-		} else if res.Status() == http.StatusInternalServerError {
-			log.Err(msg)
-		} else {
-			log.Alertf(msg)
 		}
+	} else if res.Status() == http.StatusInternalServerError {
+		log.Err(msg)
+	} else {
+		log.Alertf(msg)
 	}
 }
