@@ -74,12 +74,12 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	}
 
 	if res.Status() == http.StatusOK {
-	    if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
-			log.Info(msg)
+		if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
+			log.Errf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 		}
 	} else if res.Status() == http.StatusInternalServerError {
-		log.Err(msg)
+		log.Errf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	} else {
-		log.Alertf(msg)
+		log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	}
 }
