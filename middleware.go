@@ -6,7 +6,6 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/jabong/canonburst/conf"
 	"github.com/jabong/canonburst/log"
-	"github.com/jabong/canonburst/log/timeprofiler"
 	"net/http"
 	"time"
 )
@@ -45,18 +44,18 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 			"X-Jabong-Tid":   r.Header.Get("X-Jabong-Tid"),
 		}).Info("started handling request")
 	}
-	msg := fmt.Sprintf("started handling request: method=%s remote=%s request=%s X-Jabong-Reqid=%v X-Jabong-Tid=%v", r.Method, r.RemoteAddr, r.RequestURI, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 
-	if r.RequestURI != "/catalog/v1/healthcheck/" && r.RequestURI != "/catalog/v1/healthcheck" {
-		log.Info(msg)
+	var msg string
+	if config.Env == "dev" {
+		msg = fmt.Sprintf("started handling request: method=%s remote=%s request=%s X-Jabong-Reqid=%v X-Jabong-Tid=%v", r.Method, r.RemoteAddr, r.RequestURI, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
+
+		if r.RequestURI != "/catalog/v1/healthcheck/" && r.RequestURI != "/catalog/v1/healthcheck" {
+			log.Info(msg)
+		}
 	}
 
 	next(rw, r)
 	latency := time.Since(start)
-
-	tprof := timeprofiler.StartProfiling("Url:" + " " + r.URL.Path)
-	defer log.TimetraceNMonitor(tprof, r.URL.Path)
-
 	res := rw.(negroni.ResponseWriter)
 	if config.Env == "dev" {
 		l.Logger.WithFields(logrus.Fields{
@@ -88,4 +87,3 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	}
 }
-
