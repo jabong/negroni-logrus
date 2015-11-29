@@ -77,7 +77,7 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
-	log.GetDAgent().Gauge("Response_Time", latency.Seconds())
+	log.GetDAgent().Histogram("Response_Time", latency.Seconds())
 	
 	if res.Status() == http.StatusOK {
 		if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
