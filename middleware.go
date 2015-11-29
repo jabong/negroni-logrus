@@ -77,6 +77,8 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
+	log.GetDAgent().Gauge("Response_Time", latency.Seconds())
+	
 	if res.Status() == http.StatusOK {
 		if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
 			log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
