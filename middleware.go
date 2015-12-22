@@ -56,6 +56,8 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 
 	next(rw, r)
 	latency := time.Since(start)
+	log.GetDAgent().Histogram("Botique_ResponseTime", latency.Seconds())
+	
 	res := rw.(negroni.ResponseWriter)
 	if config.Env == "dev" {
 		l.Logger.WithFields(logrus.Fields{
@@ -77,8 +79,6 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
-	log.GetDAgent().Histogram("Response_Time", latency.Seconds())
-	
 	if res.Status() == http.StatusOK {
 		if latency > (time.Duration(config.LogLatencyLimit) * time.Millisecond) {
 			log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
