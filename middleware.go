@@ -56,8 +56,6 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 
 	next(rw, r)
 	latency := time.Since(start)
-	log.GetDAgent().Histogram("Botique_ResponseTime", latency.Seconds())
-	
 	res := rw.(negroni.ResponseWriter)
 	if config.Env == "dev" {
 		l.Logger.WithFields(logrus.Fields{
@@ -73,8 +71,6 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		}).Info("completed handling request")
 	}
 	msg = fmt.Sprintf("completed handling request: measure#%s.latency=%d method=%s remote=%s request=%s status=%d text_status=%s took=%s X-Jabong-Reqid=%v X-Jabong-Tid=%v", l.Name, latency.Nanoseconds(), r.Method, r.RemoteAddr, r.RequestURI, res.Status(), http.StatusText(res.Status()), latency, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
-	log.GetDAgent().Histogram(fmt.Sprintf("%d_requests", res.Status()), 1)
-
 	if r.RequestURI == "/catalog/v1/healthcheck/" || r.RequestURI == "/catalog/v1/healthcheck" {
 		return
 	}
@@ -84,8 +80,10 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 			log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 		}
 	} else if res.Status() == http.StatusInternalServerError {
+		log.GetDAgent().Histogram(fmt.Sprintf("%d_requests", res.Status()), 1)
 		log.Errf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	} else {
+		log.GetDAgent().Histogram(fmt.Sprintf("%d_requests", res.Status()), 1)
 		log.Alertf(msg, r.Header.Get("X-Jabong-Reqid"), r.Header.Get("X-Jabong-Tid"))
 	}
 }
